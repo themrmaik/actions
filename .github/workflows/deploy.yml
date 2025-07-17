@@ -1,31 +1,28 @@
-name: Meu teste de deploy
+name: Deploy para VM via Cloudflare Tunnel
 
-on: 
+on:
   push:
     branches:
       - main
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checker o codigo
-        uses: actions/checkout@v4
-        
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
-       
-      - name: upload do site
-        uses: actions/upload-pages-artifact@v3
-        with:
-           path: .
 
-      - name: Publicar do GitHub Pages
-        uses: actions/deploy-pages@v4
-        
-          
+    steps:
+      - name: 📥 Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configurar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ssh.tmmtecnologia.com >> ~/.ssh/known_hosts
+
+      - name: 🚀 Enviar index.html via SSH Cloudflare Tunnel
+        run: |
+          scp index.html ${{ secrets.SSH_USER }}@ssh.tmmtecnologia.com:/home/${{ secrets.SSH_USER }}/index.html
+
+      - name: ✅ Finalizado com sucesso
+        run: echo "🎉 index.html enviado para a VM com sucesso!"
